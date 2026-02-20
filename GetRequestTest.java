@@ -35,10 +35,10 @@ public class GetRequestTest {
             .extract()
             .response();
         
-        // Проверка статус кода (как в pm.test("response is ok"))
+        // Проверка статус кода
         assertEquals(200, response.statusCode());
         
-        // Проверка тела ответа (как в pm.test с jsonBody)
+        // Проверка тела ответа
         assertEquals("bar1", response.jsonPath().getString("args.foo1"));
         assertEquals("bar2", response.jsonPath().getString("args.foo2"));
         
