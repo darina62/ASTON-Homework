@@ -13,11 +13,9 @@ public class PostRequestTest {
     public void testPostRequest() {
         RestAssured.baseURI = "https://postman-echo.com";
         
-        // Создаем тело запроса как на скриншоте
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("test", "value");
         
-        // Текст из скриншота: "This is expected to be sent back as part of response body."
         String expectedText = "This is expected to be sent back as part of response body.";
         
         given()
@@ -26,9 +24,9 @@ public class PostRequestTest {
         .when()
             .post("/post")
         .then()
-            .statusCode(200)                                   // pm.test("response is ok")
-            .body("data", containsString(expectedText))        // pm.test с проверкой data
-            .body("json.test", equalTo("value"))               // проверка отправленных данных
+            .statusCode(200)                                   
+            .body("data", containsString(expectedText))        
+            .body("json.test", equalTo("value"))               
             .body("headers.content-type", containsString("application/json"));
     }
     
@@ -60,7 +58,7 @@ public class PostRequestTest {
         // Проверка отправленных данных
         assertEquals("value", response.jsonPath().getString("json.test"));
         
-        // Проверка метода (как в pm.test("testing method"))
+        // Проверка метода
         String url = response.jsonPath().getString("url");
         assertTrue(url.contains("/post"));
     }
