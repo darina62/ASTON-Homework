@@ -3,7 +3,9 @@ package com.example.tests;
 import com.example.pages.HomePage;
 import com.example.pages.PaymentPage;
 import org.junit.jupiter.api.*;
+import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 
@@ -84,57 +86,89 @@ public class MtsPaymentTest {
         System.out.println("Тест 4 пройден: все надписи корректны");
     }
 
-    // ТЕСТ 5: Заполнение формы и проверка всплывающего окна
+    // ТЕСТ 5: Заполнение формы и проверка всплывающего окна оплаты
     @Test
     public void testPaymentForm() {
-        System.out.println("=== ТЕСТ 5: Заполнение формы и проверка всплывающего окна ===");
+        System.out.println("\n=== ТЕСТ 5: Заполнение формы и проверка всплывающего окна оплаты ===");
 
-        // Заполняем форму
+        // 1. Заполняем форму на главной странице
         homePage.fillPhoneServiceForm("297777777", "100", "");
 
-        // Нажимаем кнопку
-        PaymentPage paymentPage = homePage.clickContinueButton();
+        // 2. Нажимаем кнопку "Продолжить"
+        homePage.clickContinueButton();
 
-        // Ждем появления всплывающего окна
+        // 3. Ждем появления всплывающего окна
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // 4. Находим видимый iframe
+        List<WebElement> iframes = driver.findElements(By.tagName("iframe"));
+
+        int visibleIframeIndex = -1;
+        for (int i = 0; i < iframes.size(); i++) {
+            if (iframes.get(i).isDisplayed()) {
+                visibleIframeIndex = i;
+                break;
+            }
+        }
+
+        assertTrue(visibleIframeIndex >= 0, "Нет видимого iframe с формой оплаты!");
+
+        // 5. Переключаемся в видимый iframe
+        driver.switchTo().frame(visibleIframeIndex);
+
+        // 6. Ждем загрузки
         try {
             Thread.sleep(3000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
-        // Проверяем, что всплывающее окно появилось
-        boolean popupDisplayed = paymentPage.isPaymentPopupDisplayed();
-        System.out.println("Окно оплаты появилось: " + popupDisplayed);
+        // 7. Получаем текст из iframe
+        String entireText = driver.findElement(By.tagName("body")).getText();
 
-        assertTrue(popupDisplayed, "Окно оплаты не появилось после нажатия кнопки");
+        // 8. Проверяем сумму
+        boolean hasAmount = entireText.contains("100.00 BYN");
+        assertTrue(hasAmount, "Сумма не отображается в окне оплаты");
 
-        // Если окно появилось, проверяем информацию в нем
-        if (popupDisplayed) {
-            // Проверяем сумму
-            boolean hasAmount = paymentPage.hasAmountInPopup("100");
-            System.out.println("Сумма 100 отображается: " + hasAmount);
+        // 9. Проверяем номер телефона
+        boolean hasPhone = entireText.contains("375297777777");
+        assertTrue(hasPhone, "Номер не отображается в окне оплаты");
 
-            // Проверяем номер телефона
-            boolean hasPhone = paymentPage.hasPhoneNumberInPopup("297777777");
-            System.out.println("Номер 297777777 отображается: " + hasPhone);
+        // 10. Проверяем иконки (опционально)
+        List<WebElement> images = driver.findElements(By.tagName("img"));
+        boolean hasVisa = false;
+        boolean hasMastercard = false;
 
-            // Проверяем иконки платежных систем
-            boolean hasVisa = paymentPage.hasPaymentIconInPopup("visa");
-            boolean hasMastercard = paymentPage.hasPaymentIconInPopup("mastercard");
-            boolean hasBelkart = paymentPage.hasPaymentIconInPopup("belkart");
-
-            System.out.println("Иконка Visa: " + hasVisa);
-            System.out.println("Иконка Mastercard: " + hasMastercard);
-            System.out.println("Иконка Белкарт: " + hasBelkart);
-
-            // Проверяем надписи в полях
-            List<String> placeholders = paymentPage.getPlaceholdersInPopup();
-            System.out.println("Найдены поля с подсказками: " + placeholders);
+        for (WebElement img : images) {
+            String src = img.getAttribute("src");
+            if (src != null) {
+                if (src.contains("visa")) hasVisa = true;
+                if (src.contains("mastercard")) hasMastercard = true;
+            }
         }
 
-        // Возвращаемся на главную страницу (если переключились в iframe)
-        paymentPage.switchToMainContent();
+        // 11. Проверяем поля ввода
+        List<WebElement> inputs = driver.findElements(By.tagName("input"));
+        assertTrue(inputs.size() >= 4, "Не все поля для ввода карты найдены");
 
-        System.out.println("Тест 5 пройден: окно оплаты появилось");
+        // 12. Проверяем кнопку оплаты
+        List<WebElement> buttons = driver.findElements(By.tagName("button"));
+        boolean hasPayButton = false;
+        for (WebElement button : buttons) {
+            if (button.getText().contains("Оплатить 100.00 BYN")) {
+                hasPayButton = true;
+                break;
+            }
+        }
+        assertTrue(hasPayButton, "Кнопка оплаты не найдена");
+
+        // 13. Возвращаемся на главную страницу
+        driver.switchTo().defaultContent();
+
+        System.out.println("✅ ТЕСТ 5 ПРОЙДЕН!");
     }
 }
