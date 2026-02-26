@@ -1,0 +1,5 @@
+com\example\tests\MtsPaymentTest.class
+com\example\pages\BasePage.class
+com\example\pages\PaymentPage.class
+com\example\pages\HomePage.class
+com\example\utils\AllureListener.class
