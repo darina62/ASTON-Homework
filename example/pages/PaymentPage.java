@@ -9,89 +9,89 @@ public class PaymentPage extends BasePage {
         super(driver);
     }
 
-    // Проверить, появилось ли всплывающее окно с оплатой
+    // Проверить, что окно оплаты появилось
     public boolean isPaymentPopupDisplayed() {
         System.out.println("Проверка появления окна оплаты...");
 
-        // 1. Проверяем наличие iframe (обычно форма оплаты в iframe)
+        // Проверяем наличие iframe
         List<WebElement> iframes = driver.findElements(By.tagName("iframe"));
         System.out.println("Найдено iframe: " + iframes.size());
 
         if (iframes.size() > 0) {
-            // Пробуем переключиться в первый iframe
             try {
+                // Переключаемся в первый iframe
                 driver.switchTo().frame(0);
                 System.out.println("Переключились в iframe");
-                return true;
+
+                // Ждем загрузки контента
+                Thread.sleep(2000);
+
+                // Проверяем наличие полей ввода
+                List<WebElement> inputs = driver.findElements(By.tagName("input"));
+                if (inputs.size() > 0) {
+                    System.out.println("✓ В iframe найдены поля ввода");
+                    return true;
+                }
+
+                // Проверяем наличие кнопок
+                List<WebElement> buttons = driver.findElements(By.tagName("button"));
+                if (buttons.size() > 0) {
+                    System.out.println("✓ В iframe найдены кнопки");
+                    return true;
+                }
+
             } catch (Exception e) {
-                System.out.println("Не удалось переключиться в iframe");
+                System.out.println("Ошибка при переключении в iframe: " + e.getMessage());
             }
         }
 
-        // 2. Проверяем наличие всплывающих окон (попапов)
-        List<WebElement> popups = driver.findElements(By.className("popup"));
-        popups.addAll(driver.findElements(By.className("modal")));
-        popups.addAll(driver.findElements(By.className("payment")));
-
-        System.out.println("Найдено всплывающих окон: " + popups.size());
-
-        for (WebElement popup : popups) {
-            if (popup.isDisplayed()) {
-                System.out.println("Найдено видимое всплывающее окно");
-                return true;
-            }
-        }
-
-        // 3. Проверяем, есть ли на странице новые элементы, которых не было раньше
-        // Например, форма ввода карты
-        List<WebElement> inputs = driver.findElements(By.tagName("input"));
-        System.out.println("Всего полей ввода: " + inputs.size());
-
-        // Если полей ввода стало много - вероятно, появилась форма оплаты
-        if (inputs.size() > 5) {
-            System.out.println("Много полей ввода - вероятно, форма оплаты");
-            return true;
-        }
-
+        System.out.println("✗ Окно оплаты НЕ появилось");
         return false;
-    }
-
-    // Вернуться из iframe обратно на главную страницу
-    public void switchToMainContent() {
-        driver.switchTo().defaultContent();
-        System.out.println("Вернулись на главную страницу");
     }
 
     // Проверить наличие суммы в окне оплаты
     public boolean hasAmountInPopup(String expectedAmount) {
+        System.out.println("Проверка суммы: " + expectedAmount);
         String pageSource = driver.getPageSource();
-        return pageSource.contains(expectedAmount);
+        boolean found = pageSource.contains(expectedAmount) ||
+                pageSource.contains(expectedAmount + ".00");
+        System.out.println("Сумма найдена: " + found);
+        return found;
     }
 
     // Проверить наличие номера телефона в окне оплаты
     public boolean hasPhoneNumberInPopup(String expectedPhone) {
+        System.out.println("Проверка номера: " + expectedPhone);
         String pageSource = driver.getPageSource();
-        return pageSource.contains(expectedPhone);
+        boolean found = pageSource.contains("375" + expectedPhone) ||
+                pageSource.contains(expectedPhone);
+        System.out.println("Номер найден: " + found);
+        return found;
     }
 
-    // Проверить наличие иконок платежных систем в окне оплаты
+    // Проверить наличие иконки платежной системы
     public boolean hasPaymentIconInPopup(String iconName) {
+        System.out.println("Проверка иконки: " + iconName);
         List<WebElement> images = driver.findElements(By.tagName("img"));
         for (WebElement img : images) {
             String alt = img.getAttribute("alt");
             String src = img.getAttribute("src");
             if (alt != null && alt.toLowerCase().contains(iconName.toLowerCase())) {
+                System.out.println("Найдена иконка в alt: " + alt);
                 return true;
             }
             if (src != null && src.toLowerCase().contains(iconName.toLowerCase())) {
+                System.out.println("Найдена иконка в src: " + src);
                 return true;
             }
         }
+        System.out.println("Иконка " + iconName + " не найдена");
         return false;
     }
 
-    // Получить все placeholder'ы полей в окне оплаты
+    // Получить все placeholder'ы полей
     public List<String> getPlaceholdersInPopup() {
+        System.out.println("Сбор placeholder'ов...");
         List<WebElement> inputs = driver.findElements(By.tagName("input"));
         List<String> placeholders = new java.util.ArrayList<>();
 
@@ -102,6 +102,14 @@ public class PaymentPage extends BasePage {
                 System.out.println("Найден placeholder: " + placeholder);
             }
         }
+
+        System.out.println("Всего placeholder'ов: " + placeholders.size());
         return placeholders;
+    }
+
+    // Вернуться на главную страницу
+    public void switchToMainContent() {
+        driver.switchTo().defaultContent();
+        System.out.println("Вернулись на главную страницу");
     }
 }
