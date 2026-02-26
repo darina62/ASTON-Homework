@@ -23,7 +23,7 @@ public class BasePage {
                 Thread.sleep(1000);
             }
         } catch (Exception e) {
-            // Игнорируем
         }
     }
+
 }
